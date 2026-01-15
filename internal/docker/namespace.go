@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -165,6 +166,14 @@ func (n *Namespace) restoreState(ctx context.Context) error {
 					}
 					app := NewApplication(n, settings)
 					app.Running = c.State == "running"
+					if app.Running {
+						info, err := n.client.ContainerInspect(ctx, c.ID)
+						if err == nil && info.State != nil {
+							if t, err := time.Parse(time.RFC3339Nano, info.State.StartedAt); err == nil {
+								app.RunningSince = t
+							}
+						}
+					}
 					n.applications = append(n.applications, app)
 				}
 				break

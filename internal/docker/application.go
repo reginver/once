@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/distribution/reference"
 	"github.com/docker/docker/api/types/container"
@@ -55,9 +56,10 @@ func (s ApplicationSettings) BuildEnv(secretKeyBase string) []string {
 }
 
 type Application struct {
-	namespace *Namespace
-	Settings  ApplicationSettings
-	Running   bool
+	namespace    *Namespace
+	Settings     ApplicationSettings
+	Running      bool
+	RunningSince time.Time
 }
 
 func NewApplication(ns *Namespace, settings ApplicationSettings) *Application {
