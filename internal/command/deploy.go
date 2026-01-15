@@ -1,0 +1,72 @@
+package command
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/basecamp/amar/internal/docker"
+)
+
+type DeployCommand struct {
+	root *RootCommand
+	cmd  *cobra.Command
+	name string
+}
+
+func NewDeployCommand(root *RootCommand) *DeployCommand {
+	d := &DeployCommand{root: root}
+	d.cmd = &cobra.Command{
+		Use:   "deploy <image>",
+		Short: "Deploy an application",
+		Args:  cobra.ExactArgs(1),
+		RunE:  WithNamespace(d.run),
+	}
+	d.cmd.Flags().StringVar(&d.name, "name", "", "application name (defaults to image name)")
+	return d
+}
+
+func (d *DeployCommand) Command() *cobra.Command {
+	return d.cmd
+}
+
+// Private
+
+func (d *DeployCommand) run(ns *docker.Namespace, cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	imageRef := args[0]
+
+	name := d.name
+	if name == "" {
+		name = docker.NameFromImageRef(imageRef)
+	}
+
+	if err := ns.Setup(ctx); err != nil {
+		return fmt.Errorf("setting up namespace: %w", err)
+	}
+
+	app := ns.AddApplication(docker.ApplicationSettings{
+		Name:  name,
+		Image: imageRef,
+		Host:  name + ".localhost",
+	})
+
+	progress := func(p docker.DeployProgress) {
+		switch p.Stage {
+		case docker.DeployStageDownloading:
+			fmt.Printf("Downloading: %d%%\n", p.Percentage)
+		case docker.DeployStageStarting:
+			fmt.Println("Starting...")
+		case docker.DeployStageFinished:
+			fmt.Println("Finished")
+		}
+	}
+
+	if err := app.Deploy(ctx, progress); err != nil {
+		return fmt.Errorf("deploying: %w", err)
+	}
+
+	fmt.Printf("Deployed %s\n", name)
+	return nil
+}

@@ -1,0 +1,183 @@
+package docker
+
+import (
+	"context"
+	"slices"
+	"strings"
+
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/client"
+)
+
+const DefaultNamespace = "amar"
+
+type Namespace struct {
+	name         string
+	client       *client.Client
+	proxy        *Proxy
+	applications []*Application
+}
+
+func NewNamespace(name string) (*Namespace, error) {
+	if name == "" {
+		name = DefaultNamespace
+	}
+
+	c, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, err
+	}
+
+	ns := &Namespace{
+		name:   name,
+		client: c,
+	}
+	ns.proxy = NewProxy(ns)
+	return ns, nil
+}
+
+func RestoreNamespace(ctx context.Context, name string) (*Namespace, error) {
+	ns, err := NewNamespace(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ns.restoreState(ctx); err != nil {
+		return nil, err
+	}
+
+	return ns, nil
+}
+
+func (n *Namespace) AddApplication(settings ApplicationSettings) *Application {
+	app := NewApplication(n, settings)
+	n.applications = append(n.applications, app)
+	n.sortApplications()
+	return app
+}
+
+func (n *Namespace) Proxy() *Proxy {
+	return n.proxy
+}
+
+func (n *Namespace) Application(name string) *Application {
+	for _, app := range n.applications {
+		if app.Settings.Name == name {
+			return app
+		}
+	}
+	return nil
+}
+
+func (n *Namespace) Applications() []*Application {
+	return n.applications
+}
+
+func (n *Namespace) Setup(ctx context.Context) error {
+	if err := n.EnsureNetwork(ctx); err != nil {
+		return err
+	}
+
+	if n.proxy.Settings == nil {
+		if err := n.proxy.Boot(ctx, ProxySettings{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (n *Namespace) EnsureNetwork(ctx context.Context) error {
+	networks, err := n.client.NetworkList(ctx, network.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, net := range networks {
+		if net.Name == n.name {
+			return nil
+		}
+	}
+
+	_, err = n.client.NetworkCreate(ctx, n.name, network.CreateOptions{
+		Driver: "bridge",
+	})
+	return err
+}
+
+func (n *Namespace) Teardown(ctx context.Context, destroyVolumes bool) error {
+	for _, app := range n.applications {
+		if err := app.Destroy(ctx, destroyVolumes); err != nil {
+			return err
+		}
+	}
+
+	if err := n.proxy.Destroy(ctx, destroyVolumes); err != nil {
+		return err
+	}
+
+	return n.client.NetworkRemove(ctx, n.name)
+}
+
+func (n *Namespace) Refresh(ctx context.Context) error {
+	n.applications = nil
+	return n.restoreState(ctx)
+}
+
+func (n *Namespace) EventWatcher() *EventWatcher {
+	return NewEventWatcher(n.client, n.name)
+}
+
+// Private
+
+func (n *Namespace) restoreState(ctx context.Context) error {
+	containers, err := n.client.ContainerList(ctx, container.ListOptions{All: true})
+	if err != nil {
+		return err
+	}
+
+	proxyPrefix := n.name + "-proxy"
+	appPrefix := n.name + "-app-"
+
+	for _, c := range containers {
+		for _, name := range c.Names {
+			name = strings.TrimPrefix(name, "/")
+
+			if name == proxyPrefix {
+				label := c.Labels["amar"]
+				if label != "" {
+					settings, err := UnmarshalProxySettings(label)
+					if err != nil {
+						return err
+					}
+					n.proxy.Settings = &settings
+				}
+				break
+			}
+
+			if strings.HasPrefix(name, appPrefix) {
+				label := c.Labels["amar"]
+				if label != "" {
+					settings, err := UnmarshalApplicationSettings(label)
+					if err != nil {
+						return err
+					}
+					app := NewApplication(n, settings)
+					app.Running = c.State == "running"
+					n.applications = append(n.applications, app)
+				}
+				break
+			}
+		}
+	}
+
+	n.sortApplications()
+	return nil
+}
+
+func (n *Namespace) sortApplications() {
+	slices.SortFunc(n.applications, func(a, b *Application) int {
+		return strings.Compare(a.Settings.Name, b.Settings.Name)
+	})
+}
