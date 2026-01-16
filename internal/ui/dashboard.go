@@ -126,12 +126,16 @@ type upgradeFinishedMsg struct {
 
 func NewDashboard(app *docker.Application, scraper *metrics.MetricsScraper) Dashboard {
 	service := app.Settings.Name
+	allReqChart := NewRequestRateChart(scraper, service, "Requests/min", false)
+	errorChart := NewRequestRateChart(scraper, service, "Errors/min", true)
+	allReqChart.Update()
+	errorChart.Update()
 	return Dashboard{
 		app:         app,
 		scraper:     scraper,
 		help:        help.New(),
-		allReqChart: NewRequestRateChart(scraper, service, "Requests/min", false),
-		errorChart:  NewRequestRateChart(scraper, service, "Errors/min", true),
+		allReqChart: allReqChart,
+		errorChart:  errorChart,
 	}
 }
 
