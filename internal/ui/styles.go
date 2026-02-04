@@ -87,3 +87,10 @@ func (s styles) TitleBox(width int, title string, extra ...string) string {
 		Width(width).
 		Render(content)
 }
+
+func CenteredLayer(content string, containerWidth, containerHeight int) *lipgloss.Layer {
+	x := (containerWidth - lipgloss.Width(content)) / 2
+	y := (containerHeight - lipgloss.Height(content)) / 2
+	return lipgloss.NewLayer(content).X(x).Y(y)
+}
+

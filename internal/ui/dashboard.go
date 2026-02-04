@@ -153,34 +153,6 @@ func (m Dashboard) Update(msg tea.Msg) (Component, tea.Cmd) {
 		m.progress = NewProgressBusy(m.width, lipgloss.Color("#6272a4"))
 		m.help.SetWidth(m.width)
 
-		// Left charts round down, right charts get remainder
-		leftChartWidth := m.width / 2
-		rightChartWidth := m.width - leftChartWidth
-
-		// Calculate available height for charts
-		// Header: border (2) + title (1) + blank (1) + extra lines
-		extraLineCount := 1 // state line is always present
-		if m.app.Settings.URL() != "" {
-			extraLineCount++
-		}
-		headerHeight := 4 + extraLineCount
-		footerHeight := 1
-		// Each chart renders as: border (2) + title (1) + chartHeight rows
-		// So 2 rows of charts = 2 * (chartHeight + 3)
-		// Available = m.height - headerHeight - 1 (newline) - footerHeight
-		// 2 * (chartHeight + 3) = available
-		// chartHeight = (available / 2) - 3
-		availableHeight := m.height - headerHeight - footerHeight - 1
-		chartHeight := (availableHeight / 2) - 3
-		if chartHeight < 1 {
-			chartHeight = 1
-		}
-
-		m.allReqChart.SetSize(leftChartWidth, chartHeight)
-		m.errorChart.SetSize(rightChartWidth, chartHeight)
-		m.cpuChart.SetSize(leftChartWidth, chartHeight)
-		m.memoryChart.SetSize(rightChartWidth, chartHeight)
-
 		if m.upgrading {
 			cmds = append(cmds, m.progress.Init())
 		}
@@ -260,7 +232,50 @@ func (m Dashboard) Update(msg tea.Msg) (Component, tea.Cmd) {
 }
 
 func (m Dashboard) View() string {
-	// Build info box content
+	infoBox := m.renderInfoBox()
+	helpLine := m.renderHelpLine()
+
+	var bottomContent string
+	if m.upgrading {
+		bottomContent = m.progress.View() + "\n" + helpLine
+	} else {
+		bottomContent = helpLine
+	}
+
+	// Calculate chart dimensions from remaining space
+	headerHeight := lipgloss.Height(infoBox)
+	footerHeight := lipgloss.Height(bottomContent)
+	availableHeight := m.height - headerHeight - footerHeight - 1
+	chartHeight := (availableHeight / 2) - 3
+	if chartHeight < 1 {
+		chartHeight = 1
+	}
+
+	leftChartWidth := m.width / 2
+	rightChartWidth := m.width - leftChartWidth
+
+	m.allReqChart.SetSize(leftChartWidth, chartHeight)
+	m.errorChart.SetSize(rightChartWidth, chartHeight)
+	m.cpuChart.SetSize(leftChartWidth, chartHeight)
+	m.memoryChart.SetSize(rightChartWidth, chartHeight)
+
+	charts := m.renderCharts()
+
+	topContent := infoBox + "\n" + charts
+	topLayer := lipgloss.NewLayer(topContent)
+	bottomLayer := lipgloss.NewLayer(bottomContent).Y(m.height - footerHeight)
+
+	if m.showingMenu {
+		menuLayer := CenteredLayer(m.settingsMenu.View(), m.width, m.height)
+		return lipgloss.NewCanvas(topLayer, bottomLayer, menuLayer).Render()
+	}
+
+	return lipgloss.NewCanvas(topLayer, bottomLayer).Render()
+}
+
+// Private
+
+func (m Dashboard) renderInfoBox() string {
 	var status string
 	var statusColor color.Color
 	if m.upgrading {
@@ -286,45 +301,19 @@ func (m Dashboard) View() string {
 	if url := m.app.Settings.URL(); url != "" {
 		extraLines = append(extraLines, fmt.Sprintf("URL: %s", url))
 	}
-	infoBox := Styles.TitleBox(m.width, m.app.Settings.Name, extraLines...)
-
-	// Charts in 2x2 grid
-	row1 := lipgloss.JoinHorizontal(lipgloss.Top, m.allReqChart.View(), m.errorChart.View())
-	row2 := lipgloss.JoinHorizontal(lipgloss.Top, m.cpuChart.View(), m.memoryChart.View())
-	charts := lipgloss.JoinVertical(lipgloss.Left, row1, row2)
-
-	// Help string (last line, centered)
-	helpView := m.help.View(dashboardKeys)
-	helpLine := lipgloss.NewStyle().Width(m.width).Align(lipgloss.Center).Render(helpView)
-
-	// Progress bar (second-to-last line, only during upgrade)
-	var bottomContent string
-	if m.upgrading {
-		bottomContent = m.progress.View() + "\n" + helpLine
-	} else {
-		bottomContent = helpLine
-	}
-
-	topContent := infoBox + "\n" + charts
-	bottomHeight := lipgloss.Height(bottomContent)
-
-	topLayer := lipgloss.NewLayer(topContent)
-	bottomLayer := lipgloss.NewLayer(bottomContent).Y(m.height - bottomHeight)
-
-	if m.showingMenu {
-		menuBox := m.settingsMenu.View()
-		menuWidth := lipgloss.Width(menuBox)
-		menuHeight := lipgloss.Height(menuBox)
-		menuX := (m.width - menuWidth) / 2
-		menuY := (m.height - menuHeight) / 2
-		menuLayer := lipgloss.NewLayer(menuBox).X(menuX).Y(menuY)
-		return lipgloss.NewCanvas(topLayer, bottomLayer, menuLayer).Render()
-	}
-
-	return lipgloss.NewCanvas(topLayer, bottomLayer).Render()
+	return Styles.TitleBox(m.width, m.app.Settings.Name, extraLines...)
 }
 
-// Private
+func (m Dashboard) renderHelpLine() string {
+	helpView := m.help.View(dashboardKeys)
+	return lipgloss.NewStyle().Width(m.width).Align(lipgloss.Center).Render(helpView)
+}
+
+func (m Dashboard) renderCharts() string {
+	row1 := lipgloss.JoinHorizontal(lipgloss.Top, m.allReqChart.View(), m.errorChart.View())
+	row2 := lipgloss.JoinHorizontal(lipgloss.Top, m.cpuChart.View(), m.memoryChart.View())
+	return lipgloss.JoinVertical(lipgloss.Left, row1, row2)
+}
 
 func (m Dashboard) runUpgrade() tea.Cmd {
 	return func() tea.Msg {
