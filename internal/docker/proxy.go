@@ -83,7 +83,7 @@ func (p *Proxy) Boot(ctx context.Context, settings ProxySettings) error {
 			Image: proxyImage,
 			Cmd:   []string{"kamal-proxy", "run", "--metrics-port", fmt.Sprintf("%d", settings.MetricsPort)},
 			Labels: map[string]string{
-				"amar": settings.Marshal(),
+				"once": settings.Marshal(),
 			},
 			ExposedPorts: nat.PortSet{
 				"80/tcp":       struct{}{},

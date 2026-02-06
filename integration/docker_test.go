@@ -17,14 +17,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/basecamp/amar/internal/docker"
+	"github.com/basecamp/once/internal/docker"
 )
 
 func TestDockerDeployment(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns, err := docker.NewNamespace("amar-test")
+	ns, err := docker.NewNamespace("once-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 
@@ -42,7 +42,7 @@ func TestRestoreState(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns1, err := docker.NewNamespace("amar-restore-test")
+	ns1, err := docker.NewNamespace("once-restore-test")
 	require.NoError(t, err)
 	defer ns1.Teardown(ctx, true)
 
@@ -57,7 +57,7 @@ func TestRestoreState(t *testing.T) {
 	})
 	require.NoError(t, app.Deploy(ctx, nil))
 
-	ns2, err := docker.RestoreNamespace(ctx, "amar-restore-test")
+	ns2, err := docker.RestoreNamespace(ctx, "once-restore-test")
 	require.NoError(t, err)
 
 	require.NotNil(t, ns2.Proxy().Settings)
@@ -73,7 +73,7 @@ func TestVolumePersistence(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns1, err := docker.NewNamespace("amar-volume-test")
+	ns1, err := docker.NewNamespace("once-volume-test")
 	require.NoError(t, err)
 
 	require.NoError(t, ns1.EnsureNetwork(ctx))
@@ -83,7 +83,7 @@ func TestVolumePersistence(t *testing.T) {
 	require.NoError(t, ns1.Proxy().Exec(ctx, []string{"sh", "-c", "echo 'hello' > " + testFile}))
 	require.NoError(t, ns1.Teardown(ctx, false))
 
-	ns2, err := docker.NewNamespace("amar-volume-test")
+	ns2, err := docker.NewNamespace("once-volume-test")
 	require.NoError(t, err)
 	defer ns2.Teardown(ctx, true)
 
@@ -96,7 +96,7 @@ func TestApplicationVolume(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns, err := docker.NewNamespace("amar-volume-label-test")
+	ns, err := docker.NewNamespace("once-volume-label-test")
 	require.NoError(t, err)
 
 	vol1, err := docker.CreateVolume(ctx, ns, "testapp", docker.ApplicationVolumeSettings{SecretKeyBase: "test-secret"})
@@ -114,7 +114,7 @@ func TestGaplessDeployment(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns, err := docker.NewNamespace("amar-gapless-test")
+	ns, err := docker.NewNamespace("once-gapless-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 
@@ -135,7 +135,7 @@ func TestGaplessDeployment(t *testing.T) {
 	firstName, err := app.ContainerName(ctx)
 	require.NoError(t, err)
 
-	containerPrefix := "amar-gapless-test-app-gapless-"
+	containerPrefix := "once-gapless-test-app-gapless-"
 	countBefore := countContainers(t, ctx, containerPrefix)
 
 	require.NoError(t, app.Deploy(ctx, nil), "second deploy")
@@ -161,7 +161,7 @@ func TestLargeLabelData(t *testing.T) {
 
 	largeValue := strings.Repeat("x", 64*1024) // 64KB
 
-	ns, err := docker.NewNamespace("amar-large-label-test")
+	ns, err := docker.NewNamespace("once-large-label-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 
@@ -177,7 +177,7 @@ func TestLargeLabelData(t *testing.T) {
 	})
 	require.NoError(t, app.Deploy(ctx, nil))
 
-	ns2, err := docker.RestoreNamespace(ctx, "amar-large-label-test")
+	ns2, err := docker.RestoreNamespace(ctx, "once-large-label-test")
 	require.NoError(t, err)
 
 	restoredApp := ns2.Application("largelabel")
@@ -189,7 +189,7 @@ func TestStartStop(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns, err := docker.NewNamespace("amar-startstop-test")
+	ns, err := docker.NewNamespace("once-startstop-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 
@@ -222,7 +222,7 @@ func TestLongAppName(t *testing.T) {
 	// This test verifies that long app names work correctly.
 	longName := strings.Repeat("x", 200)
 
-	ns, err := docker.NewNamespace("amar-long-name-test")
+	ns, err := docker.NewNamespace("once-long-name-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 
@@ -235,7 +235,7 @@ func TestLongAppName(t *testing.T) {
 	})
 	require.NoError(t, app.Deploy(ctx, nil))
 
-	ns2, err := docker.RestoreNamespace(ctx, "amar-long-name-test")
+	ns2, err := docker.RestoreNamespace(ctx, "once-long-name-test")
 	require.NoError(t, err)
 
 	restoredApp := ns2.Application(longName)
@@ -247,7 +247,7 @@ func TestContainerLogConfig(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns, err := docker.NewNamespace("amar-logconfig-test")
+	ns, err := docker.NewNamespace("once-logconfig-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 
@@ -260,7 +260,7 @@ func TestContainerLogConfig(t *testing.T) {
 	})
 	require.NoError(t, app.Deploy(ctx, nil))
 
-	assertContainerLogConfig(t, ctx, "amar-logconfig-test-proxy")
+	assertContainerLogConfig(t, ctx, "once-logconfig-test-proxy")
 
 	containerName, err := app.ContainerName(ctx)
 	require.NoError(t, err)
@@ -271,7 +271,7 @@ func TestBackup(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns, err := docker.NewNamespace("amar-backup-test")
+	ns, err := docker.NewNamespace("once-backup-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 
@@ -298,15 +298,15 @@ func TestBackup(t *testing.T) {
 
 	entries := extractTarGz(t, &buf)
 
-	assert.Contains(t, entries, "amar.application.json")
+	assert.Contains(t, entries, "once.application.json")
 	var appSettings docker.ApplicationSettings
-	require.NoError(t, json.Unmarshal(entries["amar.application.json"], &appSettings))
+	require.NoError(t, json.Unmarshal(entries["once.application.json"], &appSettings))
 	assert.Equal(t, "backupapp", appSettings.Name)
 	assert.Equal(t, imageName, appSettings.Image)
 
-	assert.Contains(t, entries, "amar.volume.json")
+	assert.Contains(t, entries, "once.volume.json")
 	var volSettings docker.ApplicationVolumeSettings
-	require.NoError(t, json.Unmarshal(entries["amar.volume.json"], &volSettings))
+	require.NoError(t, json.Unmarshal(entries["once.volume.json"], &volSettings))
 	assert.NotEmpty(t, volSettings.SecretKeyBase)
 
 	assert.Contains(t, entries, "data/testfile.txt")
@@ -318,7 +318,7 @@ func TestRestore(t *testing.T) {
 	defer cancel()
 
 	// Create and backup an app
-	ns1, err := docker.NewNamespace("amar-restore-src")
+	ns1, err := docker.NewNamespace("once-restore-src")
 	require.NoError(t, err)
 	defer ns1.Teardown(ctx, true)
 
@@ -348,7 +348,7 @@ func TestRestore(t *testing.T) {
 	require.NoError(t, app.Backup(ctx, &backupBuf))
 
 	// Restore to a different namespace
-	ns2, err := docker.NewNamespace("amar-restore-dst")
+	ns2, err := docker.NewNamespace("once-restore-dst")
 	require.NoError(t, err)
 	defer ns2.Teardown(ctx, true)
 
@@ -377,7 +377,7 @@ func TestRestore(t *testing.T) {
 	})
 
 	// Verify that the app and volume are properly labelled by restoring the namespace
-	ns3, err := docker.RestoreNamespace(ctx, "amar-restore-dst")
+	ns3, err := docker.RestoreNamespace(ctx, "once-restore-dst")
 	require.NoError(t, err)
 
 	restoredAppFromState := ns3.Application("restoreapp")
@@ -394,7 +394,7 @@ func TestRestoreExistingAppFails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	ns, err := docker.NewNamespace("amar-restore-exists-test")
+	ns, err := docker.NewNamespace("once-restore-exists-test")
 	require.NoError(t, err)
 	defer ns.Teardown(ctx, true)
 

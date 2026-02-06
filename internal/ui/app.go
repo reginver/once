@@ -8,8 +8,8 @@ import (
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/basecamp/amar/internal/docker"
-	"github.com/basecamp/amar/internal/metrics"
+	"github.com/basecamp/once/internal/docker"
+	"github.com/basecamp/once/internal/metrics"
 )
 
 type KeyMap struct {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/basecamp/amar/internal/docker"
+	"github.com/basecamp/once/internal/docker"
 )
 
 type BackupCommand struct {

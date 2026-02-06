@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/basecamp/amar/internal/command"
+	"github.com/basecamp/once/internal/command"
 )
 
 func main() {

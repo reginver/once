@@ -16,7 +16,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-const DefaultNamespace = "amar"
+const DefaultNamespace = "once"
 
 type Namespace struct {
 	name         string
@@ -201,7 +201,7 @@ func (n *Namespace) restoreState(ctx context.Context) error {
 			name = strings.TrimPrefix(name, "/")
 
 			if name == proxyPrefix {
-				label := c.Labels["amar"]
+				label := c.Labels["once"]
 				if label != "" {
 					settings, err := UnmarshalProxySettings(label)
 					if err != nil {
@@ -213,7 +213,7 @@ func (n *Namespace) restoreState(ctx context.Context) error {
 			}
 
 			if strings.HasPrefix(name, appPrefix) {
-				label := c.Labels["amar"]
+				label := c.Labels["once"]
 				if label != "" {
 					settings, err := UnmarshalApplicationSettings(label)
 					if err != nil {
@@ -282,7 +282,7 @@ func (n *Namespace) parseBackup(r io.Reader) (ApplicationSettings, ApplicationVo
 		}
 
 		switch header.Name {
-		case "amar.application.json":
+		case "once.application.json":
 			data, err := io.ReadAll(tr)
 			if err != nil {
 				return appSettings, volSettings, nil, fmt.Errorf("%w: reading application settings: %v", ErrInvalidBackup, err)
@@ -293,7 +293,7 @@ func (n *Namespace) parseBackup(r io.Reader) (ApplicationSettings, ApplicationVo
 			}
 			foundApp = true
 
-		case "amar.volume.json":
+		case "once.volume.json":
 			data, err := io.ReadAll(tr)
 			if err != nil {
 				return appSettings, volSettings, nil, fmt.Errorf("%w: reading volume settings: %v", ErrInvalidBackup, err)

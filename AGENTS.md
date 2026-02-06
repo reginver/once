@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-Amar is a CLI/TUI tool for installing and managing web applications from Docker
+Once is a CLI/TUI tool for installing and managing web applications from Docker
 images. It's designed to make self-hosting as easy as possible.
 
-Amar uses a proxy server (github.com/basecamp/kamal-proxy) to route traffic to
+Once uses a proxy server (github.com/basecamp/kamal-proxy) to route traffic to
 the application containers, which allows it to provide zero-downtime restarts
 and upgrades, automatic SSL, and multiple applications running on a single
-server. A single instance of Amar may deploy one proxy container, along with
+server. A single instance of Once may deploy one proxy container, along with
 multiple application containers. Host-based routing is used inside the proxy to
 route traffic to the correct application container.
 
@@ -18,7 +18,7 @@ route traffic to the correct application container.
 
 ### Container Naming
 
-All containers are namespaced (default namespace: "amar"):
+All containers are namespaced (default namespace: "once"):
 - Proxy: `{namespace}-proxy`
 - Apps: `{namespace}-app-{appName}-{shortID}`
 
@@ -28,20 +28,20 @@ new version without downtime.
 
 ### Data and State
 
-Amar deals primarily with two classes of state:
+Once deals primarily with two classes of state:
 
 - Application data: this is stored in Docker volumes to provide persistent
-storage between versions of the app container. Amar provides one volume for
+storage between versions of the app container. Once provides one volume for
 each app, which it will mount into two locations (`/storage` and
-`/rails/storage`) to match typical app conventions. Amar may provide backup and
+`/rails/storage`) to match typical app conventions. Once may provide backup and
 restore features on the contents of those volumes. But it does not otherwise
 touch the volume contents, or have any opinions about what should be in there
 -- this data is entirely for each app's own use.
 
 - Configuration: this keeps track of the applications and settings that have
-been set up using Amar itself. For example, the list of applications that are
+been set up using Once itself. For example, the list of applications that are
 deployed, the hostname and TLS settings for each, any custom port settings for
-the proxy, and so on. Amar stores this information as JSON strings in an `amar`
+the proxy, and so on. Once stores this information as JSON strings in an `once`
 label on the containers and volumes, so that everything is stored within the
 Docker state. Application settings go with the app container; proxy settings go
 with the proxy container; volume settings (like encryption keys) go with the

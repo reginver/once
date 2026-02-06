@@ -12,8 +12,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
-	"github.com/basecamp/amar/internal/docker"
-	"github.com/basecamp/amar/internal/metrics"
+	"github.com/basecamp/once/internal/docker"
+	"github.com/basecamp/once/internal/metrics"
 )
 
 var chartColors = struct {

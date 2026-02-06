@@ -253,11 +253,11 @@ func (a *Application) Backup(ctx context.Context, w io.Writer) error {
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
-	if err := writeTarEntry(tw, "amar.application.json", []byte(a.Settings.Marshal())); err != nil {
+	if err := writeTarEntry(tw, "once.application.json", []byte(a.Settings.Marshal())); err != nil {
 		return fmt.Errorf("writing application settings: %w", err)
 	}
 
-	if err := writeTarEntry(tw, "amar.volume.json", []byte(vol.Settings.Marshal())); err != nil {
+	if err := writeTarEntry(tw, "once.volume.json", []byte(vol.Settings.Marshal())); err != nil {
 		return fmt.Errorf("writing volume settings: %w", err)
 	}
 
@@ -479,7 +479,7 @@ func (a *Application) containerConfig(env []string) *container.Config {
 	return &container.Config{
 		Image: a.Settings.Image,
 		Labels: map[string]string{
-			"amar": a.Settings.Marshal(),
+			"once": a.Settings.Marshal(),
 		},
 		Env: env,
 	}

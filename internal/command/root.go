@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/basecamp/amar/internal/docker"
-	"github.com/basecamp/amar/internal/ui"
+	"github.com/basecamp/once/internal/docker"
+	"github.com/basecamp/once/internal/ui"
 )
 
 type RootCommand struct {
@@ -18,7 +18,7 @@ type RootCommand struct {
 func NewRootCommand() *RootCommand {
 	r := &RootCommand{}
 	r.cmd = &cobra.Command{
-		Use:   "amar",
+		Use:   "once",
 		Short: "Manage web applications from Docker images",
 		RunE: WithNamespace(func(ns *docker.Namespace, cmd *cobra.Command, args []string) error {
 			return ui.Run(ns)
