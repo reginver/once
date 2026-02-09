@@ -243,5 +243,5 @@ func (m *Logs) renderTitleBox() string {
 	if m.filterActive || m.filterText != "" {
 		extraLines = append(extraLines, " "+m.filterInput.View())
 	}
-	return Styles.TitleBox(m.width, m.app.Settings.Name+" - Logs", extraLines...)
+	return Styles.TitleBox(m.width, m.app.Settings.URL()+" - Logs", extraLines...)
 }

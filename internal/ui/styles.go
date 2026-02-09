@@ -37,8 +37,7 @@ type styles struct {
 
 var Styles = styles{
 	Title: lipgloss.NewStyle().
-		Background(Colors.Primary).
-		Foreground(Colors.TextDark).
+		Foreground(Colors.Primary).
 		Bold(true),
 	SubTitle: lipgloss.NewStyle().
 		Foreground(Colors.Secondary).
@@ -71,10 +70,8 @@ func (s styles) Focus(base lipgloss.Style, focused bool) lipgloss.Style {
 
 func (s styles) TitleBox(width int, title string, extra ...string) string {
 	innerWidth := width - 2
-	bgStyle := lipgloss.NewStyle().Background(Colors.Primary)
 	titleLine := lipgloss.Place(innerWidth, 1, lipgloss.Center, lipgloss.Center,
-		s.Title.Render(title),
-		lipgloss.WithWhitespaceStyle(bgStyle))
+		s.Title.Render(title))
 	lines := []string{titleLine}
 	if len(extra) > 0 {
 		lines = append(lines, "")

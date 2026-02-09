@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"slices"
+	"strconv"
 	"time"
 
 	"charm.land/bubbles/v2/help"
@@ -320,12 +321,21 @@ func renderInfoBox(width int, app *docker.Application, upgrading bool) string {
 		stateDisplay += fmt.Sprintf(" (up %s)", formatDuration(time.Since(app.RunningSince)))
 	}
 
-	var extraLines []string
-	extraLines = append(extraLines, stateDisplay)
-	if url := app.Settings.URL(); url != "" {
-		extraLines = append(extraLines, fmt.Sprintf("URL: %s", url))
+	cpuLimit := "unlimited"
+	if app.Settings.Resources.CPUs > 0 {
+		cpuLimit = strconv.Itoa(app.Settings.Resources.CPUs)
 	}
-	return Styles.TitleBox(width, app.Settings.Name, extraLines...)
+	memoryLimit := "unlimited"
+	if app.Settings.Resources.MemoryMB > 0 {
+		memoryLimit = strconv.Itoa(app.Settings.Resources.MemoryMB)
+	}
+
+	extraLines := []string{
+		stateDisplay,
+		fmt.Sprintf("CPU: %s  Memory: %s", cpuLimit, memoryLimit),
+	}
+
+	return Styles.TitleBox(width, app.Settings.URL(), extraLines...)
 }
 
 func formatDuration(d time.Duration) string {

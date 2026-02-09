@@ -143,7 +143,7 @@ func (m Settings) Update(msg tea.Msg) (Component, tea.Cmd) {
 
 func (m Settings) View() string {
 	subtitle := Styles.SubTitle.Width(m.width).Align(lipgloss.Center).Render(m.section.Title() + " Settings")
-	titleBox := Styles.TitleBox(m.width, m.app.Settings.Name, subtitle)
+	titleBox := Styles.TitleBox(m.width, m.app.Settings.URL(), subtitle)
 
 	var contentView string
 	if m.state == settingsStateForm {

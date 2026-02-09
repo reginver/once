@@ -81,6 +81,10 @@ func (m SettingsFormResources) Update(msg tea.Msg) (SettingsSection, tea.Cmd) {
 			return m.focusPrev()
 		case key.Matches(msg, key.NewBinding(key.WithKeys("enter"))):
 			return m.handleEnter()
+		case m.focused == resourcesFieldCPU || m.focused == resourcesFieldMemory:
+			if text := msg.Key().Text; text != "" && (text[0] < '0' || text[0] > '9') {
+				return m, nil
+			}
 		}
 	}
 
@@ -165,17 +169,8 @@ func (m SettingsFormResources) handleEnter() (SettingsSection, tea.Cmd) {
 	case resourcesFieldCPU, resourcesFieldMemory:
 		return m.focusNext()
 	case resourcesFieldDoneButton:
-		if v, err := strconv.Atoi(m.cpuInput.Value()); err == nil {
-			m.settings.Resources.CPUs = v
-		} else {
-			m.settings.Resources.CPUs = 0
-		}
-
-		if v, err := strconv.Atoi(m.memoryInput.Value()); err == nil {
-			m.settings.Resources.MemoryMB = v
-		} else {
-			m.settings.Resources.MemoryMB = 0
-		}
+		m.settings.Resources.CPUs, _ = strconv.Atoi(m.cpuInput.Value())
+		m.settings.Resources.MemoryMB, _ = strconv.Atoi(m.memoryInput.Value())
 
 		return m, func() tea.Msg { return SettingsSectionSubmitMsg{Settings: m.settings} }
 	case resourcesFieldCancelButton:
@@ -183,3 +178,4 @@ func (m SettingsFormResources) handleEnter() (SettingsSection, tea.Cmd) {
 	}
 	return m, nil
 }
+
