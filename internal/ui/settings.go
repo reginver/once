@@ -212,7 +212,7 @@ func (m Settings) Update(msg tea.Msg) (Component, tea.Cmd) {
 }
 
 func (m Settings) View() string {
-	titleLine := Styles.TitleRule(m.width, m.app.Settings.Host, strings.ToLower(m.section.Title())+" settings")
+	titleLine := Styles.TitleRule(m.width, m.app.Settings.Host, strings.ToLower(m.section.Title()))
 
 	var contentView string
 	switch m.state {
