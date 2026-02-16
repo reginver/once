@@ -6,6 +6,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/compat"
+	"github.com/charmbracelet/x/ansi"
 )
 
 type colors struct {
@@ -99,5 +100,65 @@ func (s styles) HelpLine(width int, content string) string {
 
 func (s styles) CenteredLine(width int, content string) string {
 	return lipgloss.NewStyle().Width(width).Align(lipgloss.Center).Render(content)
+}
+
+// WithBackground re-applies a background color after any SGR reset sequences
+// within the content, so that inner styled elements don't clear the outer
+// background. Resets with no visible content following on the same line are
+// left alone, preventing the background from bleeding past the panel edge.
+func WithBackground(bg color.Color, content string) string {
+	bgSeq := ansi.NewStyle().BackgroundColor(bg).String()
+	p := ansi.NewParser()
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		lines[i] = applyBackgroundToLine(line, bgSeq, p)
+	}
+	return strings.Join(lines, "\n")
+}
+
+// Helpers
+
+func applyBackgroundToLine(line, bgSeq string, p *ansi.Parser) string {
+	var result strings.Builder
+	remaining := line
+	var state byte
+	for len(remaining) > 0 {
+		seq, _, n, newState := ansi.DecodeSequence(remaining, state, p)
+		state = newState
+		result.WriteString(seq)
+		if isSGRReset(seq, p) && hasVisibleContent(remaining[n:]) {
+			result.WriteString(bgSeq)
+		}
+		remaining = remaining[n:]
+	}
+	return result.String()
+}
+
+func isSGRReset(seq string, p *ansi.Parser) bool {
+	if !ansi.HasCsiPrefix(seq) {
+		return false
+	}
+
+	cmd := ansi.Cmd(p.Command())
+	if cmd.Final() != 'm' || cmd.Prefix() != 0 || cmd.Intermediate() != 0 {
+		return false
+	}
+
+	params := p.Params()
+	return len(params) == 0 || (len(params) == 1 && params[0].Param(-1) == 0)
+}
+
+func hasVisibleContent(s string) bool {
+	var state byte
+	remaining := s
+	for len(remaining) > 0 {
+		_, width, n, newState := ansi.DecodeSequence(remaining, state, nil)
+		state = newState
+		if width > 0 {
+			return true
+		}
+		remaining = remaining[n:]
+	}
+	return false
 }
 

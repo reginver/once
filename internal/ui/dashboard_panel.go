@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"image/color"
-	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -95,7 +94,7 @@ func (p DashboardPanel) View(selected bool, toggling bool, width int) string {
 	var body string
 	if selected {
 		body = bodyStyle.Background(Colors.PanelBg).Render(content)
-		body = fixBackground(body, Colors.PanelBg)
+		body = WithBackground(Colors.PanelBg, body)
 	} else {
 		body = bodyStyle.Render(content)
 	}
@@ -215,25 +214,6 @@ func renderStateInfo(app *docker.Application, toggling bool) string {
 	return stateDisplay
 }
 
-// fixBackground works around a lipgloss limitation where inner styled elements
-// emit ANSI reset sequences that clear the outer background color. This
-// replaces every reset with reset + re-apply, so the background persists
-// across styled spans within each line.
-var ansiReset = regexp.MustCompile(`\x1b\[0?m`)
-
-func fixBackground(s string, bg color.Color) string {
-	r, g, b, _ := bg.RGBA()
-	bgSeq := fmt.Sprintf("\x1b[48;2;%d;%d;%dm", r>>8, g>>8, b>>8)
-	fixed := ansiReset.ReplaceAllString(s, "${0}"+bgSeq)
-	// The replace above also patches the trailing reset on each line, which
-	// would cause the background to bleed past the panel. Strip those so
-	// each line ends with a clean reset.
-	lines := strings.Split(fixed, "\n")
-	for i, line := range lines {
-		lines[i] = strings.TrimSuffix(line, bgSeq)
-	}
-	return strings.Join(lines, "\n")
-}
 
 func formatDuration(d time.Duration) string {
 	if d < time.Minute {
