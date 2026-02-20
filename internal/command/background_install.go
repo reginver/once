@@ -8,22 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/basecamp/once/internal/systemd"
+	"github.com/basecamp/once/internal/service"
 )
-
-const unitTemplate = `[Unit]
-Description=Once background tasks (%s)
-After=network.target docker.service
-
-[Service]
-Type=simple
-ExecStart=%s background run --namespace %s
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-`
 
 type BackgroundInstallCommand struct {
 	root *RootCommand
@@ -34,7 +20,7 @@ func NewBackgroundInstallCommand(root *RootCommand) *BackgroundInstallCommand {
 	b := &BackgroundInstallCommand{root: root}
 	b.cmd = &cobra.Command{
 		Use:   "install",
-		Short: "Install background tasks as a systemd service",
+		Short: "Install background tasks as a system service",
 		Args:  cobra.NoArgs,
 		RunE:  b.run,
 	}
@@ -61,19 +47,23 @@ func (b *BackgroundInstallCommand) run(cmd *cobra.Command, args []string) error 
 		return fmt.Errorf("finding executable path: %w", err)
 	}
 
-	serviceName := namespace + "-background"
-	unitContent := fmt.Sprintf(unitTemplate, namespace, execPath, namespace)
+	svc, err := service.New()
+	if err != nil {
+		return err
+	}
 
-	if systemd.IsInstalled(serviceName) {
-		fmt.Printf("Service %s.service is already installed\n", serviceName)
+	serviceName := namespace + "-background"
+
+	if svc.IsInstalled(serviceName) {
+		fmt.Printf("Service %s is already installed\n", svc.ServiceName(serviceName))
 		return nil
 	}
 
-	if err := systemd.Install(ctx, serviceName, unitContent); err != nil {
+	if err := svc.Install(ctx, serviceName, execPath, namespace); err != nil {
 		return fmt.Errorf("installing service: %w", err)
 	}
 
-	fmt.Printf("Installed and started %s.service\n", serviceName)
+	fmt.Printf("Installed and started %s\n", svc.ServiceName(serviceName))
 	return nil
 }
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/basecamp/once/internal/systemd"
+	"github.com/basecamp/once/internal/service"
 )
 
 type BackgroundUninstallCommand struct {
@@ -19,7 +19,7 @@ func NewBackgroundUninstallCommand(root *RootCommand) *BackgroundUninstallComman
 	b := &BackgroundUninstallCommand{root: root}
 	b.cmd = &cobra.Command{
 		Use:   "uninstall",
-		Short: "Uninstall the background tasks systemd service",
+		Short: "Uninstall the background tasks system service",
 		Args:  cobra.NoArgs,
 		RunE:  b.run,
 	}
@@ -40,17 +40,23 @@ func (b *BackgroundUninstallCommand) run(cmd *cobra.Command, args []string) erro
 	ctx := context.Background()
 
 	namespace, _ := cmd.Root().PersistentFlags().GetString("namespace")
+
+	svc, err := service.New()
+	if err != nil {
+		return err
+	}
+
 	serviceName := namespace + "-background"
 
-	if !systemd.IsInstalled(serviceName) {
-		fmt.Printf("Service %s.service is not installed\n", serviceName)
+	if !svc.IsInstalled(serviceName) {
+		fmt.Printf("Service %s is not installed\n", svc.ServiceName(serviceName))
 		return nil
 	}
 
-	if err := systemd.Remove(ctx, serviceName); err != nil {
+	if err := svc.Remove(ctx, serviceName); err != nil {
 		return fmt.Errorf("removing service: %w", err)
 	}
 
-	fmt.Printf("Uninstalled %s.service\n", serviceName)
+	fmt.Printf("Uninstalled %s\n", svc.ServiceName(serviceName))
 	return nil
 }
