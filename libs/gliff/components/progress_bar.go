@@ -96,7 +96,7 @@ func (p *ProgressBar) Render() string {
 // Private
 
 func (p *ProgressBar) tick() tui.Cmd {
-	return tui.After(20*time.Millisecond, func(t time.Time) tui.Msg {
+	return tui.After(20*time.Millisecond, func() tui.Msg {
 		return ProgressBarTickMsg{}
 	})
 }

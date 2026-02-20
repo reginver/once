@@ -195,7 +195,7 @@ func (t *TextField) SetEchoMode(mode EchoMode) {
 func (t *TextField) blinkCmd() tui.Cmd {
 	field := t
 	tag := t.blinkTag
-	return tui.After(530*time.Millisecond, func(time.Time) tui.Msg {
+	return tui.After(530*time.Millisecond, func() tui.Msg {
 		return textFieldBlinkMsg{field: field, tag: tag}
 	})
 }

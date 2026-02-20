@@ -24,6 +24,11 @@ type WindowSizeMsg struct {
 // QuitMsg signals that the application should exit.
 type QuitMsg struct{}
 
+// Quit returns a command that signals the application should exit.
+func Quit() Msg {
+	return QuitMsg{}
+}
+
 // MouseMsg represents mouse input.
 type MouseMsg struct {
 	Button     MouseButton

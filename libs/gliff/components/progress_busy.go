@@ -52,7 +52,7 @@ func (p *ProgressBusy) Render() string {
 // Private
 
 func (p *ProgressBusy) tick() tui.Cmd {
-	return tui.After(50*time.Millisecond, func(t time.Time) tui.Msg {
+	return tui.After(50*time.Millisecond, func() tui.Msg {
 		return ProgressBusyTickMsg{}
 	})
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/basecamp/gliff/tui"
 
@@ -115,7 +114,7 @@ func (m *App) Update(msg tui.Msg) tui.Cmd {
 	case tui.KeyMsg:
 		if appKeys.Quit.Matches(msg) {
 			m.shutdown()
-			return func() tui.Msg { return tui.QuitMsg{} }
+			return tui.Quit
 		}
 	case namespaceChangedMsg:
 		_ = m.namespace.Refresh(m.watchCtx)
@@ -193,7 +192,7 @@ func Run(ns *docker.Namespace, installImageRef string) error {
 // Private
 
 func (m *App) scheduleNextScrapeTick() tui.Cmd {
-	return tui.Every(ChartUpdateInterval, func(time.Time) tui.Msg { return scrapeTickMsg{} })
+	return tui.Every(ChartUpdateInterval, func() tui.Msg { return scrapeTickMsg{} })
 }
 
 func (m *App) shutdown() {

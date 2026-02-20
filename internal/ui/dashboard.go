@@ -249,7 +249,7 @@ func (m *Dashboard) runStartStop(app *docker.Application) tui.Cmd {
 }
 
 func (m *Dashboard) scheduleNextDashboardTick() tui.Cmd {
-	return tui.Every(time.Second, func(time.Time) tui.Msg { return dashboardTickMsg{} })
+	return tui.Every(time.Second, func() tui.Msg { return dashboardTickMsg{} })
 }
 
 func (m *Dashboard) updateViewportSize() {

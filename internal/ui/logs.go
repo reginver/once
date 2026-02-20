@@ -138,7 +138,7 @@ func (m *Logs) Render() string {
 // Private
 
 func (m *Logs) scheduleNextLogsTick() tui.Cmd {
-	return tui.Every(100*time.Millisecond, func(time.Time) tui.Msg { return logsTickMsg{} })
+	return tui.Every(100*time.Millisecond, func() tui.Msg { return logsTickMsg{} })
 }
 
 func (m *Logs) handleFilterKey(msg tui.KeyMsg) tui.Cmd {
