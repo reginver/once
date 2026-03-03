@@ -21,7 +21,7 @@ func TestChartView(t *testing.T) {
 	}
 
 	chart := NewChart("Test", UnitCount)
-	output := chart.View(data, 40, 6)
+	output := chart.View(data, 40, 6, NewChartScale(UnitCount, 100))
 
 	fmt.Println("\nChart output:")
 	fmt.Println(output)

@@ -38,7 +38,18 @@ func NewDashboardPanel(app *docker.Application, scraper *metrics.MetricsScraper,
 	}
 }
 
-func (p DashboardPanel) View(selected bool, toggling bool, width int) string {
+func (p DashboardPanel) DataMaxes() (cpu, memory, requests, errors float64) {
+	if !p.app.Running {
+		return
+	}
+
+	cpuData, memData := p.fetchDockerData()
+	reqData, errData := p.fetchMetricsData()
+
+	return maxValue(cpuData), maxValue(memData), maxValue(reqData), maxValue(errData)
+}
+
+func (p DashboardPanel) View(selected bool, toggling bool, width int, scales DashboardScales) string {
 	innerWidth := max(width-3, 0) // 1 indicator + 1 left pad + 1 right pad
 
 	url := Styles.Title.Hyperlink(p.app.URL()).Render(p.app.Settings.Host)
@@ -67,10 +78,10 @@ func (p DashboardPanel) View(selected bool, toggling bool, width int) string {
 		cpuData, memData := p.fetchDockerData()
 		reqData, errData := p.fetchMetricsData()
 
-		cpuChart := p.cpuChart.View(cpuData, chartW(0), chartHeight)
-		memChart := p.memoryChart.View(memData, chartW(1), chartHeight)
-		reqChart := p.requestChart.View(reqData, chartW(2), chartHeight)
-		errChart := p.errorChart.View(errData, chartW(3), chartHeight)
+		cpuChart := p.cpuChart.View(cpuData, chartW(0), chartHeight, scales.CPU)
+		memChart := p.memoryChart.View(memData, chartW(1), chartHeight, scales.Memory)
+		reqChart := p.requestChart.View(reqData, chartW(2), chartHeight, scales.Requests)
+		errChart := p.errorChart.View(errData, chartW(3), chartHeight, scales.Errors)
 
 		chartsRow := lipgloss.JoinHorizontal(lipgloss.Top, cpuChart, " ", memChart, " ", reqChart, " ", errChart)
 		lines = append(lines, chartsRow)

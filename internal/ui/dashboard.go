@@ -307,12 +307,30 @@ func (m *Dashboard) updateViewportSize() {
 }
 
 func (m *Dashboard) rebuildViewportContent() {
+	scales := m.computeScales()
 	var views []string
 	for i := range m.panels {
 		toggling := m.toggling && m.togglingApp == m.panels[i].app.Settings.Name
-		views = append(views, m.panels[i].View(i == m.selectedIndex, toggling, m.width))
+		views = append(views, m.panels[i].View(i == m.selectedIndex, toggling, m.width, scales))
 	}
 	m.viewport.SetContent(lipgloss.JoinVertical(lipgloss.Left, views...))
+}
+
+func (m *Dashboard) computeScales() DashboardScales {
+	var maxCPU, maxMem, maxReq, maxErr float64
+	for i := range m.panels {
+		cpu, mem, req, err := m.panels[i].DataMaxes()
+		maxCPU = max(maxCPU, cpu)
+		maxMem = max(maxMem, mem)
+		maxReq = max(maxReq, req)
+		maxErr = max(maxErr, err)
+	}
+	return DashboardScales{
+		CPU:      NewChartScale(UnitPercent, maxCPU),
+		Memory:   NewChartScale(UnitBytes, maxMem),
+		Requests: NewChartScale(UnitCount, maxReq),
+		Errors:   NewChartScale(UnitCount, maxErr),
+	}
 }
 
 func (m *Dashboard) scrollToSelection() {

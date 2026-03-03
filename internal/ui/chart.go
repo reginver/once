@@ -79,7 +79,7 @@ func NewChart(title string, unit UnitType) Chart {
 // View renders the chart as a string with a rounded border.
 // The title is embedded in the top border line. Inner rows contain
 // the braille chart with max-value and "0" labels on the first and last rows.
-func (c Chart) View(data []float64, width, height int) string {
+func (c Chart) View(data []float64, width, height int, scale ChartScale) string {
 	if width <= 0 || height <= 2 {
 		return ""
 	}
@@ -96,7 +96,7 @@ func (c Chart) View(data []float64, width, height int) string {
 	dstStart := max(0, dataPoints-len(data))
 	copy(padded[dstStart:], data[srcStart:])
 
-	maxVal := maxValue(padded)
+	maxVal := scale.Max()
 	displayMax := maxVal
 	if maxVal == 0 {
 		maxVal = 1
