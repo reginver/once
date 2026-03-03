@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -105,16 +106,6 @@ func (s ApplicationSettings) Marshal() string {
 
 func (s ApplicationSettings) TLSEnabled() bool {
 	return s.Host != "" && !s.DisableTLS && !IsLocalhost(s.Host)
-}
-
-func (s ApplicationSettings) URL() string {
-	if s.Host == "" {
-		return ""
-	}
-	if s.TLSEnabled() {
-		return "https://" + s.Host
-	}
-	return "http://" + s.Host
 }
 
 func (s ApplicationSettings) Equal(other ApplicationSettings) bool {
@@ -209,6 +200,40 @@ func (a *Application) Volume(ctx context.Context) (*ApplicationVolume, error) {
 		return nil, fmt.Errorf("generating secret key base: %w", err)
 	}
 	return CreateVolume(ctx, a.namespace, a.Settings.Name, ApplicationVolumeSettings{SecretKeyBase: skb})
+}
+
+func (a *Application) URL() string {
+	if a.Settings.Host == "" {
+		return ""
+	}
+
+	scheme := "http"
+	defaultPort := 80
+	if a.Settings.TLSEnabled() {
+		scheme = "https"
+		defaultPort = 443
+	}
+
+	base := scheme + "://" + a.Settings.Host
+
+	if a.namespace == nil {
+		return base
+	}
+
+	proxy := a.namespace.Proxy()
+	if proxy.Settings == nil {
+		return base
+	}
+
+	port := proxy.Settings.HTTPPort
+	if a.Settings.TLSEnabled() {
+		port = proxy.Settings.HTTPSPort
+	}
+
+	if port != 0 && port != defaultPort {
+		return base + ":" + strconv.Itoa(port)
+	}
+	return base
 }
 
 func (a *Application) Stop(ctx context.Context) error {
@@ -339,7 +364,7 @@ func (a *Application) BackupToFile(ctx context.Context, dir string, name string)
 }
 
 func (a *Application) VerifyHTTP(ctx context.Context) error {
-	url := a.Settings.URL()
+	url := a.URL()
 	if url == "" {
 		return nil
 	}

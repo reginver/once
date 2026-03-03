@@ -210,6 +210,62 @@ func TestVerifyHTTP_NoHost(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestURL(t *testing.T) {
+	newAppWithProxy := func(host string, disableTLS bool, proxySettings *ProxySettings) *Application {
+		ns := &Namespace{}
+		ns.proxy = &Proxy{Settings: proxySettings}
+		return &Application{
+			namespace: ns,
+			Settings:  ApplicationSettings{Host: host, DisableTLS: disableTLS},
+		}
+	}
+
+	t.Run("empty host", func(t *testing.T) {
+		app := &Application{Settings: ApplicationSettings{}}
+		assert.Equal(t, "", app.URL())
+	})
+
+	t.Run("nil namespace", func(t *testing.T) {
+		app := &Application{Settings: ApplicationSettings{Host: "app.example.com"}}
+		assert.Equal(t, "https://app.example.com", app.URL())
+	})
+
+	t.Run("nil proxy settings", func(t *testing.T) {
+		ns := &Namespace{}
+		ns.proxy = &Proxy{}
+		app := &Application{
+			namespace: ns,
+			Settings:  ApplicationSettings{Host: "app.localhost", DisableTLS: true},
+		}
+		assert.Equal(t, "http://app.localhost", app.URL())
+	})
+
+	t.Run("default HTTP port", func(t *testing.T) {
+		app := newAppWithProxy("app.localhost", true, &ProxySettings{HTTPPort: 80})
+		assert.Equal(t, "http://app.localhost", app.URL())
+	})
+
+	t.Run("custom HTTP port", func(t *testing.T) {
+		app := newAppWithProxy("app.localhost", true, &ProxySettings{HTTPPort: 8080})
+		assert.Equal(t, "http://app.localhost:8080", app.URL())
+	})
+
+	t.Run("default HTTPS port", func(t *testing.T) {
+		app := newAppWithProxy("app.example.com", false, &ProxySettings{HTTPSPort: 443})
+		assert.Equal(t, "https://app.example.com", app.URL())
+	})
+
+	t.Run("custom HTTPS port", func(t *testing.T) {
+		app := newAppWithProxy("app.example.com", false, &ProxySettings{HTTPSPort: 8443})
+		assert.Equal(t, "https://app.example.com:8443", app.URL())
+	})
+
+	t.Run("localhost disables TLS", func(t *testing.T) {
+		app := newAppWithProxy("chat.localhost", false, &ProxySettings{HTTPPort: 9090})
+		assert.Equal(t, "http://chat.localhost:9090", app.URL())
+	})
+}
+
 func TestParseBackupTime(t *testing.T) {
 	t.Run("valid backup name", func(t *testing.T) {
 		ts, ok := parseBackupTime("myapp", "myapp-20250115-093000.tar.gz")
