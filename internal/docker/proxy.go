@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
@@ -157,7 +158,10 @@ func (p *Proxy) Destroy(ctx context.Context, destroyVolumes bool) error {
 }
 
 func (p *Proxy) Exec(ctx context.Context, cmd []string) error {
-	_, err := p.ExecOutput(ctx, cmd)
+	output, err := p.ExecOutput(ctx, cmd)
+	if err != nil && output != "" {
+		return fmt.Errorf("%w: %s", err, strings.TrimSpace(output))
+	}
 	return err
 }
 
