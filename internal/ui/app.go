@@ -63,6 +63,7 @@ type App struct {
 	systemScraper   *system.Scraper
 	userStats       *userstats.Reader
 	currentScreen   Component
+	sizeGuard       TerminalSizeGuard
 	lastSize        tea.WindowSizeMsg
 	eventChan       <-chan struct{}
 	watchCtx        context.Context
@@ -117,6 +118,7 @@ func NewApp(ns *docker.Namespace, installImageRef string) *App {
 		systemScraper:   systemScraper,
 		userStats:       userStats,
 		currentScreen:   screen,
+		sizeGuard:       NewTerminalSizeGuard(80, 24),
 		eventChan:       eventChan,
 		watchCtx:        ctx,
 		watchCancel:     cancel,
@@ -139,6 +141,7 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.lastSize = msg
+		m.sizeGuard = m.sizeGuard.Update(msg)
 
 	case tea.MouseClickMsg:
 		ms := msg.Mouse()
@@ -247,10 +250,14 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *App) View() tea.View {
-	content := m.currentScreen.View()
-	cleaned := mouse.Sweep(content)
+	var content string
+	if m.sizeGuard.LargeEnough() {
+		content = mouse.Sweep(m.currentScreen.View())
+	} else {
+		content = m.sizeGuard.View()
+	}
 
-	v := tea.NewView(cleaned)
+	v := tea.NewView(content)
 	v.AltScreen = true
 	v.MouseMode = tea.MouseModeAllMotion
 	return v
