@@ -317,6 +317,20 @@ func TestInstall_HelpKeyShownOnHostnameScreen(t *testing.T) {
 	assert.Contains(t, view, "help")
 }
 
+func TestInstall_HelpKeyShownOnHostnameScreenNonFirstRun(t *testing.T) {
+	ns := newTestNamespace("campfire")
+	m := NewInstall(ns, "")
+	m, _ = updateInstall(m, tea.WindowSizeMsg{Width: 80, Height: 24})
+
+	// Navigate to hostname screen
+	m, _ = updateInstall(m, InstallCustomSelectedMsg{})
+	m, _ = updateInstall(m, InstallImageSubmitMsg{ImageRef: "ghcr.io/basecamp/once-campfire:latest"})
+
+	view := ansi.Strip(m.View())
+	assert.Contains(t, view, "F1")
+	assert.Contains(t, view, "help")
+}
+
 func TestOverlayBlockContainsRow(t *testing.T) {
 	block := newOverlayBlock("hello\nworld", 5, 10)
 	assert.Equal(t, 5, block.width) // "hello" and "world" are both 5 chars

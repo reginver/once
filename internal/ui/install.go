@@ -252,14 +252,14 @@ func (m Install) View() string {
 	var result string
 	if m.starfield != nil {
 		if m.showLogo() && m.state != installStateActivity {
-			result = m.renderLogoWithStarfield(contentView, middleH) + "\n" + helpLine
+			result = lipgloss.JoinVertical(lipgloss.Left, m.renderLogoWithStarfield(contentView, middleH), helpLine)
 		} else {
-			result = m.renderMiddleWithStarfield(contentView, middleH) + "\n" + helpLine
+			result = lipgloss.JoinVertical(lipgloss.Left, m.renderMiddleWithStarfield(contentView, middleH), helpLine)
 		}
 	} else {
 		middle := m.renderMiddleCentered(contentView, middleH)
 		titleLine := Styles.TitleRule(m.width, "install")
-		result = titleLine + "\n\n" + middle + helpLine
+		result = lipgloss.JoinVertical(lipgloss.Left, titleLine, "", middle, helpLine)
 	}
 
 	if m.popupHelp != nil {
