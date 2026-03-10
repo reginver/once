@@ -27,6 +27,22 @@ func TestBuildEnvWithSMTP(t *testing.T) {
 	assert.Contains(t, env, "MAILER_FROM_ADDRESS=noreply@example.com")
 }
 
+func TestBuildEnvWithCPULimit(t *testing.T) {
+	settings := ApplicationSettings{Resources: ContainerResources{CPUs: 4}}
+
+	env := settings.BuildEnv("test-secret-key")
+
+	assert.Contains(t, env, "NUM_CPUS=4")
+}
+
+func TestBuildEnvWithoutCPULimit(t *testing.T) {
+	settings := ApplicationSettings{}
+
+	env := settings.BuildEnv("test-secret-key")
+
+	assert.NotContains(t, env, "NUM_CPUS=0")
+}
+
 func TestBuildEnvWithoutSMTP(t *testing.T) {
 	settings := ApplicationSettings{}
 

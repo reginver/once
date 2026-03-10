@@ -99,6 +99,10 @@ func (s ApplicationSettings) BuildEnv(secretKeyBase string) []string {
 		env = append(env, "DISABLE_SSL=true")
 	}
 
+	if s.Resources.CPUs > 0 {
+		env = append(env, "NUM_CPUS="+strconv.Itoa(s.Resources.CPUs))
+	}
+
 	env = append(env, s.SMTP.BuildEnv()...)
 
 	for k, v := range s.EnvVars {
