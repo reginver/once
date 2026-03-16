@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,9 +24,15 @@ var (
 	ErrInvalidBackup      = errors.New("invalid backup archive")
 	ErrBackupPathRelative = errors.New("backup path must be absolute")
 	ErrSetupFailed        = errors.New("setup failed")
-	ErrPullFailed         = errors.New("pull failed")
-	ErrDeployFailed       = errors.New("deploy failed")
-	ErrVerificationFailed = errors.New("verification failed")
+	ErrPullFailed = &describedError{
+		msg:         "pull failed",
+		description: "Failed to download the application image. Check that the image name is correct and try again.",
+	}
+	ErrDeployFailed = errors.New("deploy failed")
+	ErrVerificationFailed = &describedError{
+		msg:         "verification failed",
+		description: "The application did not respond to a health check after starting. It may have crashed or need longer to start up.",
+	}
 	ErrUnpauseFailed      = errors.New("failed to unpause container after backup")
 )
 
@@ -353,6 +360,10 @@ func (a *Application) deployWithVolume(ctx context.Context, vol *ApplicationVolu
 		TLS:     a.Settings.TLSEnabled(),
 	}); err != nil {
 		a.namespace.client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
+		if strings.Contains(err.Error(), "target not healthy") || strings.Contains(err.Error(), "deploy timed out") {
+			slog.Error("Application failed to start", "app", a.Settings.Name, "error", err)
+			return ErrAppNotStarted
+		}
 		return fmt.Errorf("registering with proxy: %w", err)
 	}
 

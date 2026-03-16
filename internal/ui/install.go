@@ -232,7 +232,7 @@ func (m Install) View() string {
 	} else {
 		formView := m.viewCurrentScreen()
 		if m.err != nil {
-			errorLine := lipgloss.NewStyle().Foreground(Colors.Error).Render("Error: " + m.err.Error())
+			errorLine := lipgloss.NewStyle().Foreground(Colors.Error).Width(m.width).Align(lipgloss.Center).Render(docker.ErrorMessage(m.err))
 			formView = lipgloss.JoinVertical(lipgloss.Center, errorLine, "", formView)
 		}
 		contentView = formView

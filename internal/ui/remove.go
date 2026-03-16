@@ -119,7 +119,7 @@ func (m Remove) View() string {
 	} else {
 		var errorLine string
 		if m.err != nil {
-			errorLine = lipgloss.NewStyle().Foreground(Colors.Error).Render("Error: " + m.err.Error())
+			errorLine = lipgloss.NewStyle().Foreground(Colors.Error).Width(m.width).Align(lipgloss.Center).Render(docker.ErrorMessage(m.err))
 		}
 		contentView = lipgloss.JoinVertical(lipgloss.Center, errorLine, "", m.confirmation.View())
 	}

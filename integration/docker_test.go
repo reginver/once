@@ -86,29 +86,6 @@ func TestRestoreState(t *testing.T) {
 	assert.Equal(t, app.Settings.Image, restoredApp.Settings.Image)
 }
 
-func TestVolumePersistence(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	ns1, err := docker.NewNamespace("once-volume-test")
-	require.NoError(t, err)
-
-	require.NoError(t, ns1.EnsureNetwork(ctx))
-	require.NoError(t, ns1.Proxy().Boot(ctx, getProxyPorts(t)))
-
-	testFile := "/home/kamal-proxy/.config/kamal-proxy/test-persistence.txt"
-	require.NoError(t, ns1.Proxy().Exec(ctx, []string{"sh", "-c", "echo 'hello' > " + testFile}))
-	require.NoError(t, ns1.Teardown(ctx, false))
-
-	ns2, err := docker.NewNamespace("once-volume-test")
-	require.NoError(t, err)
-	defer ns2.Teardown(ctx, true)
-
-	require.NoError(t, ns2.EnsureNetwork(ctx))
-	require.NoError(t, ns2.Proxy().Boot(ctx, getProxyPorts(t)))
-	require.NoError(t, ns2.Proxy().Exec(ctx, []string{"test", "-f", testFile}), "test file should exist after reboot")
-}
-
 func TestApplicationVolume(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()

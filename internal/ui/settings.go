@@ -202,7 +202,7 @@ func (m Settings) View() string {
 	case settingsStateForm:
 		var statusLine string
 		if m.err != nil {
-			statusLine = lipgloss.NewStyle().Foreground(Colors.Error).Render("Error: " + m.err.Error())
+			statusLine = lipgloss.NewStyle().Foreground(Colors.Error).Width(m.width).Align(lipgloss.Center).Render(docker.ErrorMessage(m.err))
 		} else if line := m.section.StatusLine(); line != "" {
 			statusLine = lipgloss.NewStyle().Foreground(Colors.Muted).Render(line)
 		}

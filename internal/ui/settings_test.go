@@ -144,7 +144,7 @@ func TestSettings_ViewShowsError(t *testing.T) {
 	s.height = 24
 
 	view := s.View()
-	assert.Contains(t, view, "Error:")
+	assert.Contains(t, view, assert.AnError.Error())
 }
 
 func TestSettings_ViewShowsProgressWhileDeploying(t *testing.T) {

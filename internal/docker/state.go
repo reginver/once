@@ -100,7 +100,7 @@ func (s *State) ensureApp(appName string) *AppState {
 func newResult(err error) OperationResult {
 	r := OperationResult{At: time.Now()}
 	if err != nil {
-		r.Error = err.Error()
+		r.Error = ErrorMessage(err)
 	}
 	return r
 }

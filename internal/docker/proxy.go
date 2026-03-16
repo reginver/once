@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/containerd/errdefs"
@@ -139,6 +140,10 @@ func (p *Proxy) Boot(ctx context.Context, settings ProxySettings) error {
 	}
 
 	if err := p.namespace.client.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
+		if isPortConflict(err) {
+			slog.Error("Port conflict starting proxy", "error", err)
+			return ErrProxyPortInUse
+		}
 		return fmt.Errorf("starting proxy container: %w", err)
 	}
 
@@ -190,6 +195,10 @@ func (p *Proxy) containerName() string {
 func (p *Proxy) ensureRunning(ctx context.Context, info container.InspectResponse) error {
 	if !info.State.Running {
 		if err := p.namespace.client.ContainerStart(ctx, info.ID, container.StartOptions{}); err != nil {
+			if isPortConflict(err) {
+				slog.Error("Port conflict starting proxy", "error", err)
+				return ErrProxyPortInUse
+			}
 			return fmt.Errorf("starting proxy container: %w", err)
 		}
 	}

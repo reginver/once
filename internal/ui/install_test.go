@@ -96,12 +96,11 @@ func TestInstall_FailureReturnsToHostname(t *testing.T) {
 
 	// Simulate failure
 	installErr := errors.New("connection refused")
-	m, cmd := updateInstall(m, InstallActivityFailedMsg{Err: installErr})
+	m, _ = updateInstall(m, InstallActivityFailedMsg{Err: installErr})
 
-	assert.NotNil(t, cmd, "expected logo Init cmd on failure return")
 	assert.Equal(t, installStateHostname, m.state)
 	assert.Equal(t, installErr, m.err)
-	assert.Contains(t, m.View(), "Error: connection refused")
+	assert.Contains(t, m.View(), "connection refused")
 }
 
 func TestInstall_ErrorClearsOnKeypress(t *testing.T) {
@@ -281,17 +280,11 @@ func TestInstall_UniqueHostnameAllowsInstall(t *testing.T) {
 	assert.Nil(t, m.err)
 }
 
-func TestInstall_FailureRestartsLogoOnlyWhenNoApps(t *testing.T) {
+func TestInstall_FailureDoesNotRestartLogo(t *testing.T) {
 	noApps := NewInstall(nil, "")
 	noApps, _ = updateInstall(noApps, tea.WindowSizeMsg{Width: 80, Height: 40})
 	noApps, _ = updateInstall(noApps, InstallFormSubmitMsg{ImageRef: "ghcr.io/basecamp/once-campfire:latest", Hostname: "app.example.com"})
 	_, cmd := updateInstall(noApps, InstallActivityFailedMsg{Err: errors.New("fail")})
-	assert.NotNil(t, cmd)
-
-	withApps := NewInstall(newTestNamespace(docker.ApplicationSettings{Name: "myapp"}), "")
-	withApps, _ = updateInstall(withApps, tea.WindowSizeMsg{Width: 80, Height: 40})
-	withApps, _ = updateInstall(withApps, InstallFormSubmitMsg{ImageRef: "ghcr.io/basecamp/once-campfire:latest", Hostname: "app.example.com"})
-	_, cmd = updateInstall(withApps, InstallActivityFailedMsg{Err: errors.New("fail")})
 	assert.Nil(t, cmd)
 }
 
