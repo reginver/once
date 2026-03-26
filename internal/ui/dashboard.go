@@ -52,9 +52,9 @@ type Dashboard struct {
 	selectedIndex int
 	width, height int
 	viewport      viewport.Model
-	toggling    bool
-	togglingApp string
-	progress    Progress
+	toggling      bool
+	togglingApp   string
+	progress      Progress
 	help          Help
 	overlay       Component
 }

@@ -1091,4 +1091,3 @@ func buildAndPushImage(t *testing.T, ctx context.Context, tag, version string) {
 	io.Copy(io.Discard, pushResp)
 	pushResp.Close()
 }
-
