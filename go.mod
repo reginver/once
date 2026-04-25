@@ -1,3 +1,3 @@
-module github.com/basecamp/once
+module github.com/myfork/once
 
 go 1.21
