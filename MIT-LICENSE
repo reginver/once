@@ -22,3 +22,4 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- Forked for personal study and experimentation. Original project: https://github.com/basecamp/once
 -- Notes: Exploring the once package to understand lazy initialization patterns in Go.
 --        Experimenting with adding timeout support and context cancellation on top of the base implementation.
+--        Also looking into whether a Reset() method could be safely added for testing scenarios.
